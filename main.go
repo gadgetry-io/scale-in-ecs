@@ -34,7 +34,7 @@ func main() {
 
 // Handler wraps ScaleInECS for Lambda
 func Handler() {
-	scaleInECS(getEnv("CLUSTER", "dev"), getEnv("CLUSTER", "80"))
+	scaleInECS(getEnv("CLUSTER", "dev"), getEnv("DESIRED_MEMORY_RESERVATION", "80"))
 }
 
 func scaleInECS(cluster string, maxMemory string) (s string, err error) {
