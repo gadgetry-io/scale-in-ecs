@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	memWithinBounds = "Will not scale in. MemoryReservation is within bounds."
+	memWithinBounds         = "Will not scale in. MemoryReservation is within bounds."
+	clusterSizeWithinBounds = "Will not scale in. Cluster size within bounds."
 )
 
 var (
@@ -34,15 +35,20 @@ func main() {
 
 // Handler wraps ScaleInECS for Lambda
 func Handler() {
-	scaleInECS(getEnv("CLUSTER", "dev"), getEnv("DESIRED_MEMORY_RESERVATION", "80"))
+	scaleInECS(getEnv("CLUSTER", "dev"), getEnv("DESIRED_MEMORY_RESERVATION", "80"), getEnv("MIN_CLUSTER_SIZE", "1"))
 }
 
-func scaleInECS(cluster string, maxMemory string) (s string, err error) {
+func scaleInECS(cluster string, maxMemory string, minClusterSize string) (s string, err error) {
 
 	// init the ECS Service
 	svc := ecs.New(sess)
 
-	maxMemoryInt, err := strconv.Atoi(getEnv("MAXMEM", maxMemory))
+	maxMemoryInt, err := strconv.Atoi(getEnv("DESIRED_MEMORY_RESERVATION", maxMemory))
+	if err != nil {
+		return
+	}
+
+	minClusterSizeInt, err := strconv.Atoi(getEnv("MIN_CLUSTER_SIZE", minClusterSize))
 	if err != nil {
 		return
 	}
@@ -72,6 +78,11 @@ func scaleInECS(cluster string, maxMemory string) (s string, err error) {
 		Cluster: aws.String(cluster),
 	})
 	if err != nil {
+		return
+	}
+
+	if len(containerInstanceList.ContainerInstanceArns) <= minClusterSizeInt {
+		log.Print(clusterSizeWithinBounds)
 		return
 	}
 
