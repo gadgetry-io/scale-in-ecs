@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -156,7 +157,12 @@ func getCurrentMemoryReservation(cluster string) (i int, err error) {
 	}
 
 	if len(data.MetricDataResults) > 0 {
-		i = int(*data.MetricDataResults[0].Values[0])
+		fmt.Println(*data.MetricDataResults[0])
+		if len(data.MetricDataResults[0].Values) > 0 {
+			i = int(*data.MetricDataResults[0].Values[0])
+		} else {
+			i = 0
+		}
 	} else {
 		err = errors.New("unable to get current memory reservation")
 	}
